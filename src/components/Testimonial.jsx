@@ -1,27 +1,25 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { FaPen, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 const apiUrl = `${import.meta.env.VITE_SERVICE_CONTEND_URL}/api/testimonials`;
 
-const Testimoni = () => {
+const AdminTestimonial = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [form, setForm] = useState({ name: "", message: "" });
-  const [isEditing, setIsEditing] = useState(false);
-  const [editId, setEditId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
 
-  // Ambil data dari server
-  const fetchData = async () => {
+  const fetchTestimonials = async () => {
     try {
-      const res = await axios.get(apiUrl);
-      setTestimonials(res.data);
+      const response = await axios.get(apiUrl);
+      setTestimonials(response.data || []);
     } catch (error) {
       console.error("Gagal mengambil data:", error);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchTestimonials();
   }, []);
 
   const handleChange = (e) => {
@@ -31,135 +29,138 @@ const Testimoni = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (isEditing) {
-        await axios.put(`${apiUrl}/${editId}`, form);
-        setIsEditing(false);
-        setEditId(null);
+      if (editingId) {
+        await axios.put(`${apiUrl}/${editingId}`, form);
       } else {
-        const response = await axios.post(apiUrl, form);
-        if (response.status === 201 || response.status === 200) {
-          console.log("Respons POST:", response.data);
-        } else {
-          alert("Gagal menambahkan data. Cek server.");
-        }
+        await axios.post(apiUrl, form);
       }
       setForm({ name: "", message: "" });
-      fetchData();
+      setEditingId(null);
+      fetchTestimonials();
     } catch (error) {
       console.error("Gagal menyimpan data:", error);
-      alert("Terjadi kesalahan saat menyimpan data.");
     }
   };
 
-  const handleEdit = (item) => {
-    setForm({ name: item.name, message: item.message });
-    setIsEditing(true);
-    setEditId(item.id);
-  };
-
   const handleDelete = async (id) => {
-    if (confirm("Yakin ingin menghapus testimoni ini?")) {
+    if (window.confirm("Yakin ingin menghapus testimoni ini?")) {
       try {
         await axios.delete(`${apiUrl}/${id}`);
-        fetchData();
+        fetchTestimonials();
       } catch (error) {
         console.error("Gagal menghapus data:", error);
       }
     }
   };
 
-  return (
-    <div className="max-w-4xl mx-auto py-10 px-6 flex flex-col min-h-screen">
-      <h1 className="text-3xl font-bold text-green-700 mb-8 text-center">
-        Kelola Testimoni
-      </h1>
+  const handleEdit = (testi) => {
+    setForm({ name: testi.name, message: testi.message });
+    setEditingId(testi.id);
+  };
 
+  return (
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-4 text-center text-green-700">
+        Kelola Testimoni
+      </h2>
+
+      {/* Form Input */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-md rounded-lg p-6 mb-10 space-y-5"
+        className="bg-white p-8 rounded-xl shadow-md mb-6 max-w-3xl mx-auto space-y-6 border"
       >
         <div>
-          <label className="block text-sm font-medium mb-2">Nama</label>
+          <label htmlFor="name" className="block text-center font-semibold mb-2">
+            Nama
+          </label>
           <input
             type="text"
             name="name"
+            id="name"
             value={form.name}
             onChange={handleChange}
+            placeholder="Masukkan nama"
+            className="p-3 border rounded w-full"
             required
-            className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-300"
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium mb-2">Pesan</label>
+          <label htmlFor="message" className="block text-center font-semibold mb-2">
+            Pesan
+          </label>
           <textarea
             name="message"
+            id="message"
             value={form.message}
             onChange={handleChange}
+            placeholder="Tulis testimoni..."
+            className="p-3 border rounded w-full"
+            rows={4}
             required
-            rows="4"
-            className="w-full border border-gray-300 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-300"
           />
         </div>
-        <div className="text-right">
+
+        <div className="flex justify-end">
           <button
             type="submit"
-            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded"
           >
-            {isEditing ? "Update" : "Tambah"}
+            {editingId ? "Update" : "Tambah"}
           </button>
         </div>
       </form>
 
+      {/* Tabel Testimoni */}
       <div className="overflow-x-auto">
-        <table className="w-full border border-gray-300 shadow-sm text-sm">
-          <thead className="bg-green-100 text-left">
-            <tr>
-              <th className="border px-4 py-3">Nama</th>
-              <th className="border px-4 py-3">Pesan</th>
-              <th className="border px-4 py-3 text-center">Aksi</th>
+        <table className="w-full border text-sm text-center">
+          <thead>
+            <tr className="bg-green-100 text-gray-800">
+              <th className="border px-4 py-2">Nama</th>
+              <th className="border px-4 py-2">Pesan</th>
+              <th className="border px-4 py-2">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {testimonials.length === 0 ? (
-              <tr>
-                <td colSpan="3" className="text-center py-5 text-gray-500">
-                  Belum ada testimoni
-                </td>
-              </tr>
-            ) : (
-              testimonials.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 transition">
-                  <td className="border px-4 py-3 align-top">{item.name}</td>
-                  <td className="border px-4 py-3 align-top">
-                    {item.message || "Tidak ada pesan"}
-                  </td>
-                  <td className="border px-4 py-3 text-center">
-                    <div className="flex justify-center gap-3">
+            {testimonials.length > 0 ? (
+              testimonials.map((testi) => (
+                <tr key={testi.id}>
+                  <td className="border px-4 py-2 font-semibold">{testi.name}</td>
+                  <td className="border px-4 py-2">{testi.message}</td>
+                  <td className="border px-4 py-2">
+                    <div className="flex justify-center gap-2">
                       <button
-                        onClick={() => handleEdit(item)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white w-10 h-10 flex items-center justify-center rounded"
+                        onClick={() => handleEdit(testi)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded"
                         title="Edit"
                       >
-                        <FaPen size={16} />
+                        <FaEdit />
                       </button>
                       <button
-                        onClick={() => handleDelete(item.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white w-10 h-10 flex items-center justify-center rounded"
+                        onClick={() => handleDelete(testi.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white p-2 rounded"
                         title="Hapus"
                       >
-                        <FaTrash size={16} />
+                        <FaTrash />
                       </button>
                     </div>
                   </td>
                 </tr>
               ))
+            ) : (
+              <tr>
+                <td colSpan="3" className="border py-4 text-gray-500">
+                  Belum ada testimoni
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <div className="mt-auto pt-10 text-center">
-        <a href="/" className="text-blue-600 hover:underline">
+      {/* Tombol Kembali */}
+      <div className="text-center mt-6">
+        <a href="/admin" className="text-blue-500 hover:underline">
           ← Kembali ke menu utama
         </a>
       </div>
@@ -167,4 +168,4 @@ const Testimoni = () => {
   );
 };
 
-export default Testimoni;
+export default AdminTestimonial;
