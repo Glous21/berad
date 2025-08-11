@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
-const apiUrl = `${import.meta.env.VITE_SERVICE_CONTEND_URL}/api/testimonials`;
+const baseUrl = `${import.meta.env.VITE_API_BASE_URL}/api/testimonials`;
 
 const AdminTestimonial = () => {
   const [testimonials, setTestimonials] = useState([]);
@@ -11,8 +10,10 @@ const AdminTestimonial = () => {
 
   const fetchTestimonials = async () => {
     try {
-      const response = await axios.get(apiUrl);
-      setTestimonials(response.data || []);
+      const res = await fetch(baseUrl);
+      if (!res.ok) throw new Error("Gagal mengambil data");
+      const data = await res.json();
+      setTestimonials(data || []);
     } catch (error) {
       console.error("Gagal mengambil data:", error);
     }
@@ -29,11 +30,17 @@ const AdminTestimonial = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (editingId) {
-        await axios.put(`${apiUrl}/${editingId}`, form);
-      } else {
-        await axios.post(apiUrl, form);
-      }
+      const method = editingId ? "PUT" : "POST";
+      const url = editingId ? `${baseUrl}/${editingId}` : baseUrl;
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) throw new Error("Gagal menyimpan data");
+
       setForm({ name: "", message: "" });
       setEditingId(null);
       fetchTestimonials();
@@ -45,7 +52,8 @@ const AdminTestimonial = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Yakin ingin menghapus testimoni ini?")) {
       try {
-        await axios.delete(`${apiUrl}/${id}`);
+        const res = await fetch(`${baseUrl}/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Gagal menghapus data");
         fetchTestimonials();
       } catch (error) {
         console.error("Gagal menghapus data:", error);

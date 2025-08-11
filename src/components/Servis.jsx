@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { FaPen, FaTrash } from "react-icons/fa";
 
-const apiUrl = `${import.meta.env.VITE_SERVICE_CONTEND_URL}/api/services`;
+// Ganti base URL sesuai environment variable baru
+const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/services`;
 
 const AdminServis = () => {
   const [services, setServices] = useState([]);

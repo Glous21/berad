@@ -2,7 +2,8 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import { FaEdit, FaTrash } from "react-icons/fa"
 
-const apiUrl = `${import.meta.env.VITE_SERVICE_CONTEND_URL}/api/benefits`
+// Gunakan API base URL dari environment
+const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/benefits`
 
 const AdminBenefit = () => {
   const [benefits, setBenefits] = useState([])
@@ -62,7 +63,6 @@ const AdminBenefit = () => {
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4 text-black-700">Kelola Benefit</h2>
-
 
       {/* Form Tambah / Edit */}
       <form onSubmit={handleSubmit} className="mb-6 space-y-4">
@@ -124,7 +124,7 @@ const AdminBenefit = () => {
         </tbody>
       </table>
 
-      {/* Tambahan: Tombol kembali */}
+      {/* Tombol kembali */}
       <div className="mt-8 text-center">
         <a
           href="/admin"
